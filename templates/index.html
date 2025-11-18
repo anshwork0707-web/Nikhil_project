@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Planner - Task Manager & Schedule Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 15s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 100px rgba(102, 126, 234, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 50px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: headerPulse 10s ease-in-out infinite;
+        }
+        
+        @keyframes headerPulse {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-10px, -10px); }
+        }
+        
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+            font-weight: 300;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 25px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .stat-box:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            margin-top: 5px;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+        
+        .stat-icon {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            opacity: 0.7;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+            padding: 35px;
+        }
+        
+        .section {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .section:hover {
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+        
+        .section h2 i {
+            font-size: 0.9em;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #495057;
+            font-weight: 600;
+        }
+        
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+        
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 8px 20px rgba(240, 147, 251, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+        }
+        
+        .btn-success:hover {
+            box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+        }
+        
+        .task-list {
+            max-height: 550px;
+            overflow-y: auto;
+            margin-top: 15px;
+            padding-right: 5px;
+        }
+        
+        .task-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .task-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .task-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+        
+        .task-list::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #764ba2, #667eea);
+        }
+        
+        .task-item {
+            background: white;
+            padding: 18px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .task-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.2);
+        }
+        
+        .task-item.completed {
+            opacity: 0.65;
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
+        }
+        
+        .task-item.completed:hover {
+            opacity: 0.8;
+        }
+        
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .task-subject {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .task-title {
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+            line-height: 1.5;
+        }
+        
+        .task-meta {
+            font-size: 0.9em;
+            color: #6c757d;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .task-meta i {
+            margin-right: 4px;
+            color: #667eea;
+        }
+        
+        .task-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .task-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .task-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .task-btn.complete {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+        
+        .task-btn.delete {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+        
+        .plan-list {
+            max-height: 450px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .plan-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .plan-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .plan-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border-radius: 10px;
+        }
+        
+        .plan-item {
+            background: white;
+            padding: 18px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border-left: 5px solid #4facfe;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .plan-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(79, 172, 254, 0.3);
+        }
+        
+        .plan-time {
+            font-weight: 700;
+            color: #4facfe;
+            font-size: 1.2em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .plan-time i {
+            font-size: 0.9em;
+        }
+        
+        .plan-task {
+            color: #212529;
+            font-weight: 500;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .plan-subject {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            display: inline-block;
+            margin-top: 5px;
+            margin-right: 8px;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(79, 172, 254, 0.3);
+        }
+        
+        .alert {
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.3s ease-out;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .alert::before {
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 1.3em;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .alert-success::before {
+            content: '\f058';
+        }
+        
+        .alert-error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .alert-error::before {
+            content: '\f06a';
+        }
+        
+        .alert-info {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            color: #0c5460;
+            border: 2px solid #bee5eb;
+        }
+        
+        .alert-info::before {
+            content: '\f05a';
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .example-text {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 8px;
+            font-style: italic;
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(102, 126, 234, 0.2);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3em;
+            margin-bottom: 15px;
+            opacity: 0.5;
+            display: block;
+        }
+        
+        .empty-state p {
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 2em;
+            }
+            
+            header p {
+                font-size: 1em;
+            }
+            
+            .section h2 {
+                font-size: 1.3em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                border-radius: 16px;
+            }
+            
+            header {
+                padding: 30px 20px;
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .main-content {
+                padding: 20px;
+                gap: 20px;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-book-reader"></i> Study Planner</h1>
+            <p>Manage tasks and generate your daily study schedule with AI-powered insights</p>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-icon">📚</div>
+                <div class="stat-number" id="totalTasks">0</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-number" id="pendingTasks">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon">✅</div>
+                <div class="stat-number" id="completedTasks">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- Natural Language Input -->
+            <div class="section">
+                <h2><i class="fas fa-comments"></i> Add Task (Natural Language)</h2>
+                <div id="nlAlert"></div>
+                <div class="input-group">
+                    <label for="nlInput"><i class="fas fa-pencil-alt"></i> Describe your task:</label>
+                    <textarea id="nlInput" placeholder="E.g., I have a math exam tomorrow 2 hours"></textarea>
+                    <div class="example-text">
+                        <i class="fas fa-lightbulb"></i> Examples: "Physics homework on 2025-11-22", "Chemistry revision today 90 minutes"
+                    </div>
+                </div>
+                <button class="btn" onclick="addTaskNL()"><i class="fas fa-magic"></i> Add Task from Text</button>
+            </div>
+            
+            <!-- Form Input -->
+            <div class="section">
+                <h2><i class="fas fa-edit"></i> Add Task (Form)</h2>
+                <div id="formAlert"></div>
+                <div class="input-group">
+                    <label for="subject"><i class="fas fa-book"></i> Subject:</label>
+                    <select id="subject">
+                        <option value="General">General</option>
+                        <option value="Math">📐 Math</option>
+                        <option value="Physics">⚛️ Physics</option>
+                        <option value="Chemistry">🧪 Chemistry</option>
+                        <option value="Biology">🧬 Biology</option>
+                        <option value="English">📖 English</option>
+                        <option value="History">🏛️ History</option>
+                        <option value="Computer">💻 Computer</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="title"><i class="fas fa-heading"></i> Task Title:</label>
+                    <input type="text" id="title" placeholder="E.g., Chapter 5 exercises">
+                </div>
+                <div class="input-group">
+                    <label for="deadline"><i class="far fa-calendar-alt"></i> Deadline:</label>
+                    <input type="date" id="deadline">
+                </div>
+                <div class="input-group">
+                    <label for="estMinutes"><i class="far fa-clock"></i> Estimated Duration (minutes):</label>
+                    <input type="number" id="estMinutes" value="60" min="15" step="15">
+                </div>
+                <button class="btn btn-secondary" onclick="addTaskForm()"><i class="fas fa-plus-circle"></i> Add Task</button>
+            </div>
+            
+            <!-- Task List -->
+            <div class="section">
+                <h2><i class="fas fa-tasks"></i> My Tasks</h2>
+                <div class="task-list" id="taskList">
+                    <div class="empty-state">
+                        <i class="far fa-clipboard"></i>
+                        <p>No tasks yet. Add your first task above!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Generate Plan -->
+            <div class="section">
+                <h2><i class="fas fa-calendar-check"></i> Generate Today's Plan</h2>
+                <div id="planAlert"></div>
+                <div class="input-group">
+                    <label for="availableMinutes"><i class="fas fa-hourglass-half"></i> Available Study Time (minutes):</label>
+                    <input type="number" id="availableMinutes" value="180" min="30" step="30">
+                    <div class="example-text">
+                        <i class="fas fa-info-circle"></i> Default: 180 minutes (3 hours) - Adjust based on your availability
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="generatePlan()"><i class="fas fa-rocket"></i> Generate Schedule</button>
+                
+                <div id="planResult" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load tasks and stats on page load
+        window.onload = function() {
+            loadTasks();
+            loadStats();
+        };
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                document.getElementById('totalTasks').textContent = stats.total;
+                document.getElementById('pendingTasks').textContent = stats.pending;
+                document.getElementById('completedTasks').textContent = stats.completed;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load all tasks
+        async function loadTasks() {
+            try {
+                const response = await fetch('/api/tasks');
+                const tasks = await response.json();
+                
+                const taskList = document.getElementById('taskList');
+                
+                if (tasks.length === 0) {
+                    taskList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="far fa-clipboard"></i>
+                            <p>No tasks yet. Add your first task above!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                taskList.innerHTML = tasks.map(task => {
+                    const deadlineText = task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline';
+                    const completedClass = task.completed ? 'completed' : '';
+                    const completedText = task.completed ? '✓ Completed' : '';
+                    
+                    return `
+                        <div class="task-item ${completedClass}">
+                            <div class="task-header">
+                                <span class="task-subject">${task.subject}</span>
+                                <span style="color: #28a745; font-weight: 600;">${completedText}</span>
+                            </div>
+                            <div class="task-title">${task.title}</div>
+                            <div class="task-meta">
+                                <span><i class="far fa-calendar"></i> ${deadlineText}</span>
+                                <span><i class="far fa-clock"></i> ${task.est_minutes} min</span>
+                            </div>
+                            <div class="task-actions">
+                                ${!task.completed ? `<button class="task-btn complete" onclick="completeTask(${task.id})"><i class="fas fa-check"></i> Complete</button>` : ''}
+                                <button class="task-btn delete" onclick="deleteTask(${task.id})"><i class="fas fa-trash"></i> Delete</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                loadStats();
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                showAlert('taskList', 'Error loading tasks', 'error');
+            }
+        }
+
+        // Add task from natural language
+        async function addTaskNL() {
+            const text = document.getElementById('nlInput').value.trim();
+            
+            if (!text) {
+                showAlert('nlAlert', 'Please enter a task description', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/tasks/nl', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'ok') {
+                    showAlert('nlAlert', `Task added! Detected: ${result.parsed.subject}, Deadline: ${result.parsed.deadline || 'Not specified'}`, 'success');
+                    document.getElementById('nlInput').value = '';
+                    loadTasks();
+                } else {
+                    showAlert('nlAlert', result.message || 'Error adding task', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('nlAlert', 'Error adding task', 'error');
+            }
+        }
+
+        // Add task from form
+        async function addTaskForm() {
+            const subject = document.getElementById('subject').value;
+            const title = document.getElementById('title').value.trim();
+            const deadline = document.getElementById('deadline').value;
+            const estMinutes = document.getElementById('estMinutes').value;
+            
+            if (!title) {
+                showAlert('formAlert', 'Please enter a task title', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subject,
+                        title,
+                        deadline: deadline || null,
+                        est_minutes: parseInt(estMinutes)
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'ok') {
+                    showAlert('formAlert', 'Task added successfully!', 'success');
+                    document.getElementById('title').value = '';
+                    document.getElementById('deadline').value = '';
+                    document.getElementById('estMinutes').value = '60';
+                    loadTasks();
+                } else {
+                    showAlert('formAlert', result.message || 'Error adding task', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('formAlert', 'Error adding task', 'error');
+            }
+        }
+
+        // Generate study plan
+        async function generatePlan() {
+            const availableMinutes = parseInt(document.getElementById('availableMinutes').value);
+            
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ available_minutes: availableMinutes })
+                });
+                
+                const result = await response.json();
+                const planResult = document.getElementById('planResult');
+                
+                if (result.plan.length === 0) {
+                    planResult.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span>No pending tasks to schedule. Add some tasks first!</span>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <strong>Schedule generated for ${result.date}</strong><br>
+                            Using ${result.used_minutes} of ${result.available_minutes} minutes
+                        </div>
+                    </div>
+                    <div class="plan-list">
+                `;
+                
+                let currentTime = new Date();
+                currentTime.setHours(18, 0, 0); // Start at 6 PM
+                
+                result.plan.forEach((item, index) => {
+                    const startTime = new Date(currentTime);
+                    currentTime.setMinutes(currentTime.getMinutes() + item.minutes);
+                    const endTime = new Date(currentTime);
+                    
+                    const timeStr = `${startTime.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})} - ${endTime.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}`;
+                    const deadlineStr = item.deadline ? `(Due: ${new Date(item.deadline).toLocaleDateString()})` : '';
+                    
+                    html += `
+                        <div class="plan-item">
+                            <div class="plan-time"><i class="far fa-clock"></i> ${timeStr}</div>
+                            <div class="plan-task">${item.title} ${deadlineStr}</div>
+                            <span class="plan-subject">${item.subject}</span>
+                            <span class="plan-subject" style="background: linear-gradient(135deg, #f093fb, #f5576c);">${item.minutes} min</span>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                planResult.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('planAlert', 'Error generating plan', 'error');
+            }
+        }
+
+        // Complete a task
+        async function completeTask(taskId) {
+            try {
+                const response = await fetch(`/api/tasks/${taskId}/complete`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'ok') {
+                    loadTasks();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Delete a task
+        async function deleteTask(taskId) {
+            if (!confirm('Are you sure you want to delete this task?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/tasks/${taskId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'ok') {
+                    loadTasks();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Show alert message
+        function showAlert(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-error' : 'alert-info';
+            element.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+            
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
